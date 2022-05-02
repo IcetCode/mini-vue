@@ -4,6 +4,7 @@ class ReactiveEffect {
   private _fn: any;
   deps: any[] = []
   active = true
+  onStop?: () => void
   public scheduler: Function | undefined
 
   constructor(fn, scheduler?: Function) {
