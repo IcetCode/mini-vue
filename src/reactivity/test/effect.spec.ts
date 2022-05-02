@@ -25,4 +25,33 @@ describe("effect", () => {
     expect(foo).toBe(2)
     expect(runner()).toBe(3)
   });
+
+  it("scheduler", () => {
+    // 1.初始化时执行fn
+    // 2.reactive触发set时，不执行fn，执行传入的scheduler函数
+    // 3.调用runner时执行fn
+    let dummy;
+    let run: any;
+    const scheduler = jest.fn(() => {
+      run = runner;
+    });
+    const obj = reactive({foo: 1});
+    const runner = effect(
+      () => {
+        dummy = obj.foo;
+      },
+      {scheduler}
+    );
+    expect(scheduler).not.toHaveBeenCalled();
+    expect(dummy).toBe(1);
+    // should be called on first trigger
+    obj.foo++;
+    expect(scheduler).toHaveBeenCalledTimes(1);
+    // // should not run yet
+    expect(dummy).toBe(1);
+    // // manually run
+    run();
+    // // should have run
+    expect(dummy).toBe(2);
+  });
 })
