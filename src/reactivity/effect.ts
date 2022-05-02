@@ -1,7 +1,12 @@
+import {extend} from "../shared";
+
 class ReactiveEffect {
   private _fn: any;
+  deps: any[] = []
+  active = true
+  public scheduler: Function | undefined
 
-  constructor(fn, public scheduler?) {
+  constructor(fn, scheduler?: Function) {
     this._fn = fn
     this.scheduler = scheduler
   }
@@ -10,7 +15,24 @@ class ReactiveEffect {
     activeEffect = this
     return this._fn()
   }
+
+  stop() {
+    if (this.active) {
+      cleanEffect(this)
+      if (this.onStop) {
+        this.onStop()
+      }
+      this.active = false
+    }
+  }
 }
+
+function cleanEffect(effect) {
+  effect.deps.forEach((dep: any) => {
+    dep.delete(effect)
+  })
+}
+
 
 const targetMap = new Map()
 
@@ -25,7 +47,9 @@ export function track(target, key) {
     dep = new Set()
     depsMap.set(key, dep)
   }
+  if (!activeEffect) return
   dep.add(activeEffect)
+  activeEffect.deps.push(dep)
 }
 
 export function trigger(target, key) {
@@ -45,7 +69,13 @@ let activeEffect
 
 export function effect(fn, options: any = {}) {
   const _effect = new ReactiveEffect(fn, options.scheduler)
+  extend(_effect, options)
   _effect.run()
-  const runner = _effect.run.bind(_effect)
+  const runner: any = _effect.run.bind(_effect)
+  runner.effect = _effect
   return runner
+}
+
+export function stop(runner) {
+  runner.effect.stop()
 }
