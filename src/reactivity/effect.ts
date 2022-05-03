@@ -1,7 +1,7 @@
 import {extend} from "../shared";
 
 let activeEffect
-let shouldTrack = false
+let shouldTrack = false // 判断stop时是否应该进行依赖收集
 
 class ReactiveEffect {
   private _fn: any;
