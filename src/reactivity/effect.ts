@@ -3,7 +3,8 @@ import {extend} from "../shared";
 let activeEffect
 let shouldTrack = false // 判断stop时是否应该进行依赖收集
 
-class ReactiveEffect {
+// 响应式对象的依赖
+export class ReactiveEffect {
   private _fn: any;
   deps: any[] = []
   active = true // 判断是否处于stop状态
