@@ -6,37 +6,43 @@ export function render(vnode, container) {
 }
 
 // 初始化Element
-function mountElement(vnode, container) {
-  const el = document.createElement(vnode.type)
-  const {children} = vnode
 
-  if (typeof children === 'string') {
-    el.textContent = children
+
+function processElement(vnode: any, container: any) {
+  mountElement(vnode, container)
+}
+
+function mountElement(vnode: any, container: any) {
+  const el = document.createElement(vnode.type);
+
+  const {children} = vnode;
+
+  // children
+  if (typeof children === "string") {
+    el.textContent = children;
   } else if (Array.isArray(children)) {
-    mountChildren(vnode, el)
+    mountChildren(vnode, el);
   }
 
-  const {props} = vnode
-  for (const key of props) {
-    const val = props[key]
-    el.setAttribute(key, val)
+  // props
+  const {props} = vnode;
+  for (const key in props) {
+    const val = props[key];
+    el.setAttribute(key, val);
   }
-  container.append(el)
+
+  container.append(el);
 }
 
 function mountChildren(vnode, container) {
-  vnode.children.forEach(child => {
-    patch(child, container)
+  vnode.children.forEach(v => {
+    patch(v, container)
   })
-}
-
-function processElement(vnode, container) {
-  mountElement(vnode, container)
 }
 
 function patch(vnode, container) {
   // 判断vnode是否为组件或者element
-  if (vnode.type === 'string') {
+  if (typeof vnode.type === 'string') {
     processElement(vnode, container)
   } else if (isObject(vnode.type)) {
     processComponent(vnode, container)

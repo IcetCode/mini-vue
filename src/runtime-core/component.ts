@@ -17,7 +17,7 @@ export function setupComponent(instance) {
 function setupStatefulComponent(instance: any) {
   const Component = instance.type;
 
-  const { setup } = Component;
+  const {setup} = Component;
 
   if (setup) {
     const setupResult = setup();
@@ -39,7 +39,7 @@ function handleSetupResult(instance, setupResult: any) {
 function finishComponentSetup(instance: any) {
   const Component = instance.type;
 
-  if (!Component.render) {
-    instance.render = Component.render;
-  }
+  // if (Component.render) {
+  instance.render = Component.render;
+  // }
 }
