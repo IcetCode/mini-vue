@@ -1,5 +1,4 @@
 import {createComponentInstance, setupComponent} from "./component";
-import {isObject} from "../shared/index";
 import {ShapeFlags} from "../shared/shapeFlag";
 
 export function render(vnode, container) {
@@ -25,7 +24,6 @@ function processElement(vnode: any, container: any) {
 
 function mountElement(vnode: any, container: any) {
   const el = (vnode.el = document.createElement(vnode.type))
-
   const {children, shapeFlag} = vnode;
 
   // children
@@ -39,7 +37,15 @@ function mountElement(vnode: any, container: any) {
   const {props} = vnode;
   for (const key in props) {
     const val = props[key];
-    el.setAttribute(key, val);
+    const isOn = (key: string) => {
+      return /^on[A-Z]/.test(key)
+    }
+    if (isOn(key)) {
+      const event_1 = key.slice(2).toLowerCase()
+      el.addEventListener(event_1, val)
+    } else {
+      el.setAttribute(key, val);
+    }
   }
 
   container.append(el);
