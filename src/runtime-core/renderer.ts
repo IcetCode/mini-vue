@@ -9,9 +9,9 @@ export function render(vnode, container) {
 function patch(vnode, container) {
   // 判断vnode是否为组件或者element
   const {shapeFlag} = vnode
-  if (shapeFlag & shapeFlag.ELEMENT) {
+  if (shapeFlag & ShapeFlags.ELEMENT) {
     processElement(vnode, container)
-  } else if (shapeFlag & shapeFlag.STATEFUL_COMPONENT) {
+  } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
     processComponent(vnode, container)
   }
 }
@@ -26,7 +26,7 @@ function processElement(vnode: any, container: any) {
 function mountElement(vnode: any, container: any) {
   const el = (vnode.el = document.createElement(vnode.type))
 
-  const {children,shapeFlag} = vnode;
+  const {children, shapeFlag} = vnode;
 
   // children
   if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
