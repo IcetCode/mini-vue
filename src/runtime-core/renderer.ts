@@ -1,5 +1,6 @@
 import {createComponentInstance, setupComponent} from "./component";
 import {ShapeFlags} from "../shared/shapeFlag";
+import {Fragment, Text} from "./vnode";
 
 export function render(vnode, container) {
   patch(vnode, container)
@@ -7,17 +8,35 @@ export function render(vnode, container) {
 
 function patch(vnode, container) {
   // 判断vnode是否为组件或者element
-  const {shapeFlag} = vnode
-  if (shapeFlag & ShapeFlags.ELEMENT) {
-    processElement(vnode, container)
-  } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-    processComponent(vnode, container)
+  const {type, shapeFlag} = vnode
+  switch (type) {
+    case Fragment:
+      processFragment(vnode, container)
+      break
+    case Text:
+      processText(vnode, container)
+      break
+    default:
+      if (shapeFlag & ShapeFlags.ELEMENT) {
+        processElement(vnode, container)
+      } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+        processComponent(vnode, container)
+      }
   }
 }
 
+function processText(vnode, container) {
+  const {children} = vnode
+  const textNode = document.createTextNode(children)
+  container.append(textNode)
+}
+
+function processFragment(vnode, container) {
+  mountChildren(vnode, container)
+}
+
+
 // 初始化Element
-
-
 function processElement(vnode: any, container: any) {
   mountElement(vnode, container)
 }
