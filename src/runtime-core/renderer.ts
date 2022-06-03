@@ -7,7 +7,14 @@ import {EMPTY_OBJ} from "../shared";
 
 
 export function createRenderer(options) {
-  const {createElement: hostCreateElement, patchProp: hostPatchProp, insert: hostInsert} = options
+  const {
+    createElement: hostCreateElement,
+    patchProp: hostPatchProp,
+    insert: hostInsert,
+    remove: hostRemove,
+    setElementText: hostSetElementText
+  } = options
+
 
   function render(vnode, container) {
     patch(null, vnode, container, null)
@@ -39,7 +46,7 @@ export function createRenderer(options) {
   }
 
   function processFragment(n1, n2, container, parentComponent) {
-    mountChildren(n2, container, parentComponent)
+    mountChildren(n2.children, container, parentComponent)
   }
 
 
@@ -48,11 +55,11 @@ export function createRenderer(options) {
     if (!n1) {
       mountElement(n2, container, parentComponent)
     } else {
-      patchElement(n1, n2, container)
+      patchElement(n1, n2, container, parentComponent)
     }
   }
 
-  function patchElement(n1, n2, container) {
+  function patchElement(n1, n2, container, parentComponent) {
     console.log("patchElement");
     console.log("n1", n1);
     console.log("n2", n2);
@@ -60,7 +67,35 @@ export function createRenderer(options) {
     const oldProps = n1.props || EMPTY_OBJ
     const newProps = n2.props || EMPTY_OBJ
     const el = (n2.el = n1.el)
+    patchChildren(n1, n2, container, parentComponent)
     patchProps(el, oldProps, newProps)
+  }
+
+  function patchChildren(n1, n2, container, parentComponent) {
+    const prevShapeFlag = n1.shapeFlag;
+    const c1 = n1.children
+    const {shapeFlag} = n2
+    const c2 = n2.children
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        unmountChildren(n1.children)
+      }
+      if (c1 !== c2) {
+        hostSetElementText(container, c2)
+      }
+    } else {
+      if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        hostSetElementText(container, '')
+        mountChildren(c2, container, parentComponent)
+      }
+    }
+  }
+
+  function unmountChildren(children) {
+    for (let i = 0; i < children.length; i++) {
+      const el = children[i].el;
+      hostRemove(el);
+    }
   }
 
   function patchProps(el, oldProps, newProps) {
@@ -92,7 +127,7 @@ export function createRenderer(options) {
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
       el.textContent = children;
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-      mountChildren(vnode, el, parentComponent);
+      mountChildren(vnode.children, el, parentComponent);
     }
 
     // props
@@ -105,8 +140,8 @@ export function createRenderer(options) {
     hostInsert(el, container)
   }
 
-  function mountChildren(vnode, container, parentComponent) {
-    vnode.children.forEach(v => {
+  function mountChildren(children, container, parentComponent) {
+    children.forEach(v => {
       patch(null, v, container, parentComponent)
     })
   }
