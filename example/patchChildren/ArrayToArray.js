@@ -7,17 +7,17 @@ import {ref, h} from "../../lib/guide-mini-vue.esm.js";
 // 1. 左侧的对比
 // (a b) c
 // (a b) d e
-// const prevChildren = [
-//   h("p", { key: "A" }, "A"),
-//   h("p", { key: "B" }, "B"),
-//   h("p", { key: "C" }, "C"),
-// ];
-// const nextChildren = [
-//   h("p", { key: "A" }, "A"),
-//   h("p", { key: "B" }, "B"),
-//   h("p", { key: "D" }, "D"),
-//   h("p", { key: "E" }, "E"),
-// ];
+const prevChildren = [
+  h("p", {key: "A"}, "A"),
+  h("p", {key: "B"}, "B"),
+  h("p", {key: "C"}, "C"),
+];
+const nextChildren = [
+  h("p", {key: "A"}, "A"),
+  h("p", {key: "B"}, "B"),
+  h("p", {key: "D"}, "D"),
+  h("p", {key: "E"}, "E"),
+];
 
 // 2. 右侧的对比
 // a (b c)
@@ -77,12 +77,12 @@ import {ref, h} from "../../lib/guide-mini-vue.esm.js";
 // (b c)
 // i = 0, e1 = 0, e2 = -1
 
-const prevChildren = [
-  h("p", {key: "A"}, "A"),
-  h("p", {key: "B"}, "B"),
-  h("p", {key: "C"}, "C"),
-];
-const nextChildren = [h("p", {key: "B"}, "B"), h("p", {key: "C"}, "C")];
+// const prevChildren = [
+//   h("p", {key: "A"}, "A"),
+//   h("p", {key: "B"}, "B"),
+//   h("p", {key: "C"}, "C"),
+// ];
+// const nextChildren = [h("p", {key: "B"}, "B"), h("p", {key: "C"}, "C")];
 
 // 5. 对比中间的部分
 //    1. 创建新的 （在老的里面不存在，新的里面存在）

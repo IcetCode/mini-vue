@@ -87,8 +87,32 @@ export function createRenderer(options) {
       if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
         hostSetElementText(container, '')
         mountChildren(c2, container, parentComponent)
+      } else {
+        patchKeysChildren(c1, c2, container, parentComponent)
       }
     }
+  }
+
+  function patchKeysChildren(c1, c2, container, parentComponent) {
+    const e1 = c1.length - 1
+    const e2 = c2.length - 1
+    let i = 0
+
+    function isSameVNodeType(n1, n2) {
+      return n1.type === n2.type && n1.key === n2.key
+    }
+
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[i]
+      const n2 = c2[i]
+      if (isSameVNodeType(c1, c2)) {
+        patch(n1, n2, container, parentComponent)
+      } else {
+        break
+      }
+      i++
+    }
+    console.log(i)
   }
 
   function unmountChildren(children) {
