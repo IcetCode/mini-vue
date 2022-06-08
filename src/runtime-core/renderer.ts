@@ -67,7 +67,7 @@ export function createRenderer(options) {
     const oldProps = n1.props || EMPTY_OBJ
     const newProps = n2.props || EMPTY_OBJ
     const el = (n2.el = n1.el)
-    patchChildren(n1, n2, container, parentComponent, anchor)
+    patchChildren(n1, n2, el, parentComponent, anchor)
     patchProps(el, oldProps, newProps)
   }
 
@@ -148,11 +148,15 @@ export function createRenderer(options) {
       let patched = 0
       //  映射
       const keyToNewIndexMap = new Map()
-      for (let i = s2; i < e2; i++) {
+      const newIndexToOldIndexMap = new Array(toBePatched);
+      let moved = false
+      let maxNewIndexSoFar = 0
+      for (let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0
+      for (let i = s2; i <= e2; i++) {
         const nextChild = c2[i]
-        keyToNewIndexMap.set(nextChild, i)
+        keyToNewIndexMap.set(nextChild.key, i)
       }
-      for (let i = s1; i < e1; i++) {
+      for (let i = s1; i <= e1; i++) {
         const prevChild = c1[i]
 
         if (patched >= toBePatched) {
@@ -175,8 +179,35 @@ export function createRenderer(options) {
         if (newIndex === undefined) {
           hostRemove(prevChild.el);
         } else {
+          if (newIndex >= maxNewIndexSoFar) {
+            maxNewIndexSoFar = newIndex
+          } else {
+            moved = true
+          }
+          newIndexToOldIndexMap[newIndex - s2] = i + 1
           patch(prevChild, c2[newIndex], container, parentComponent, null);
           patched++;
+        }
+      }
+
+      const increasingNewIndexSequence = moved
+        ? getSequence(newIndexToOldIndexMap)
+        : [];
+      let j = increasingNewIndexSequence.length - 1;
+
+      for (let i = toBePatched - 1; i >= 0; i--) {
+        const nextIndex = i + s2;
+        const nextChild = c2[nextIndex];
+        const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
+
+        if (newIndexToOldIndexMap[i] === 0) {
+          patch(null, nextChild, container, parentComponent, anchor);
+        } else if (moved) {
+          if (j < 0 || i !== increasingNewIndexSequence[j]) {
+            hostInsert(nextChild.el, container, anchor);
+          } else {
+            j--;
+          }
         }
       }
     }
@@ -228,7 +259,7 @@ export function createRenderer(options) {
       hostPatchProp(el, key, null, val)
     }
 
-    hostInsert(el, container)
+    hostInsert(el, container, anchor)
   }
 
   function mountChildren(children, container, parentComponent, anchor) {

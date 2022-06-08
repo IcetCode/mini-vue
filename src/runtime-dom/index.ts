@@ -37,7 +37,11 @@ function setElementText(el, text) {
 }
 
 const renderer: any = createRenderer({
-  createElement, patchProp, insert, remove, setElementText
+  createElement,
+  patchProp,
+  insert,
+  remove,
+  setElementText
 })
 
 export function createApp(...args) {
