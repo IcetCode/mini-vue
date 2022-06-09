@@ -168,8 +168,8 @@ export function createRenderer(options) {
         if (prevChild.key != null) {
           newIndex = keyToNewIndexMap.get(prevChild.key)
         } else { // 如果没有设置key则遍历获取
-          for (let j = s2; j < e2; j++) {
-            if (isSameVNodeType(prevChild, e2[j])) {
+          for (let j = s2; j <= e2; j++) {
+            if (isSameVNodeType(prevChild, c2[j])) {
               newIndex = j
               break
             }
