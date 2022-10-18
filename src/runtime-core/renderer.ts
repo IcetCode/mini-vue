@@ -105,6 +105,9 @@ export function createRenderer(options) {
       return n1.type === n2.type && n1.key === n2.key
     }
 
+    // 1.sync from start
+    // (a b) c
+    // (a b) d e
     while (i <= e1 && i <= e2) {
       const n1 = c1[i]
       const n2 = c2[i]
@@ -115,6 +118,10 @@ export function createRenderer(options) {
       }
       i++
     }
+
+    // 2.sync from end
+    // a (b c)
+    // d e (b c)
     while (i <= e1 && i <= e2) {
       const n1 = c1[e1];
       const n2 = c2[e2];
@@ -126,9 +133,16 @@ export function createRenderer(options) {
       e1--;
       e2--;
     }
+
+    // 3. common sequence + mount
+    // (a b)
+    // (a b) c
+    // i = 2, e1 = 1, e2 = 2
+    // (a b)
+    // c (a b)
+    // i = 0, e1 = -1, e2 = 0
     if (i > e1) {
       if (i <= e2) {
-        // 添加
         const nextPos = e2 + 1;
         const anchor = nextPos < l2 ? c2[nextPos].el : null;
         while (i <= e2) {
@@ -136,28 +150,45 @@ export function createRenderer(options) {
           i++;
         }
       }
-    } else if (i > e2) {
-      // 删除
+    }
+      // 4. common sequence + unmount
+      // (a b) c
+      // (a b)
+      // i = 2, e1 = 2, e2 = 1
+      // a (b c)
+      // (b c)
+    // i = 0, e1 = 0, e2 = -1
+    else if (i > e2) {
       while (i <= e1) {
         hostRemove(c1[i].el);
         i++;
       }
-    } else {
-      // 差异在中间
-      let s1 = i
-      let s2 = i
-      const toBePatched = e2 - s2 + 1
-      let patched = 0
-      //  映射
-      const keyToNewIndexMap = new Map()
-      const newIndexToOldIndexMap = new Array(toBePatched);
-      let moved = false
-      let maxNewIndexSoFar = 0
-      for (let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0
+    }
+      // 5. unknown sequence
+      // [i ... e1 + 1]: a b [c d e] f g
+      // [i ... e2 + 1]: a b [e d c h] f g
+    // i = 2, e1 = 4, e2 = 5
+    else {
+      const s1 = i;
+      const s2 = i;
+
+      // 5.1 build key:index map for newChildren
+      const keyToNewIndexMap = new Map() // c2部分混乱的映射
       for (let i = s2; i <= e2; i++) {
         const nextChild = c2[i]
         keyToNewIndexMap.set(nextChild.key, i)
       }
+
+      // 5.2 loop through old children left to be patched and try to patch
+      // matching nodes & remove nodes that are no longer present
+      const toBePatched = e2 - s2 + 1 // 混乱部分的个数
+      let patched = 0 // 已经patched的个数
+      let moved = false // used to track whether any node has moved
+      let maxNewIndexSoFar = 0
+
+      const newIndexToOldIndexMap = new Array(toBePatched);
+      for (let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0
+
       for (let i = s1; i <= e1; i++) {
         const prevChild = c1[i]
 
@@ -169,7 +200,8 @@ export function createRenderer(options) {
         let newIndex
         if (prevChild.key != null) {
           newIndex = keyToNewIndexMap.get(prevChild.key)
-        } else { // 如果没有设置key则遍历获取
+        } else {
+          // 如果没有设置key则遍历获取
           for (let j = s2; j <= e2; j++) {
             if (isSameVNodeType(prevChild, c2[j])) {
               newIndex = j
@@ -178,6 +210,7 @@ export function createRenderer(options) {
           }
         }
 
+        // 新的当中不存在旧的就删除,存在就patch新旧节点
         if (newIndex === undefined) {
           hostRemove(prevChild.el);
         } else {
@@ -192,16 +225,20 @@ export function createRenderer(options) {
         }
       }
 
+      // 5.3 move and mount
+      // generate the longest stable subsequence only when nodes have moved
       const increasingNewIndexSequence = moved
         ? getSequence(newIndexToOldIndexMap)
         : [];
       let j = increasingNewIndexSequence.length - 1;
 
+      // 倒序是为了用上一个被patch的当anchor
       for (let i = toBePatched - 1; i >= 0; i--) {
         const nextIndex = i + s2;
         const nextChild = c2[nextIndex];
         const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
 
+        // 如果新的在旧的中不存在旧mount，否则就move
         if (newIndexToOldIndexMap[i] === 0) {
           patch(null, nextChild, container, parentComponent, anchor);
         } else if (moved) {
